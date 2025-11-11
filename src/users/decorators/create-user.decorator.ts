@@ -20,11 +20,11 @@ export function ApiCreateUser() {
       examples: {
         example1: {
           summary: 'Create user example',
-          value: { name: 'John Doe', email: 'john@example.com', password: 'strongPass1' },
+          value: { name: 'sama', email: 'sama@example.com', password: 'strongPass1' },
         },
       },
     }),
-    ApiCreatedResponse({ description: 'User successfully created', schema: { example: { userId: 'uuid', name: 'John Doe', email: 'john@example.com' } } }),
+    ApiCreatedResponse({ description: 'User successfully created', schema: { example: { userId: 'uuid', name: 'sama', email: 'sama@example.com' } } }),
     ApiBadRequestResponse({ description: 'Bad request. Invalid input data.' }),
   );
 }

@@ -1,74 +1,45 @@
 import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-
-// This should be a real class/interface representing a user entity
-export type User = {
-  userId: number;
-  username: string;
-  password: string;
-  name?: string;
-  email?: string;
-  isActive?: boolean;
-};
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
-  private readonly users: User[] = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-    },
-    {
-      userId: 2,
-      username: 'maria',
-      password: 'guess',
-    },
-  ];
+  constructor(
+    @InjectRepository(User) 
+    private usersRepository: Repository<User>) {}
 
   async create(dto: CreateUserDto): Promise<User> {
-    const newUser: User = {
-      userId: Date.now(),
-      username: (dto as any).name ?? (dto as any).username ?? `user_${Date.now()}`,
-      password: (dto as any).password,
-      name: (dto as any).name,
-      email: (dto as any).email,
-      isActive: (dto as any).isActive ?? true,
-    };
-    this.users.push(newUser);
-    return newUser;
+    const newUser: User = this.usersRepository.create(dto);
+    return this.usersRepository.save(newUser);
   }
 
-  async findOne(id: number): Promise<User | undefined> {
-    return this.users.find(user => user.userId === id);
-  }
-
-  /**
-   * Find a user by username (used by AuthService)
-   */
-  async findByUsername(username: string): Promise<User | undefined> {
-    return this.users.find(user => user.username === username);
-  }
- 
   async findAll(): Promise<User[]> {
-    return this.users;
-  }
-  async update(id: number, dto: UpdateUserDto): Promise<User | undefined> {
-    const userIndex = this.users.findIndex(user => user.userId === id);
-    if (userIndex === -1) {
-      return undefined;
-    }
-    this.users[userIndex] = { ...this.users[userIndex], ...dto };
-    return this.users[userIndex];
+    return this.usersRepository.find();
   }
 
-  async remove(id: number): Promise<User | undefined> {
-    const userIndex = this.users.findIndex(user => user.userId === id);
-    if (userIndex === -1) {
-      return undefined;
-    }
-    const removedUser = this.users.splice(userIndex, 1)[0];
-    return removedUser;
+  async findOne(id: string): Promise<User | null> {
+    // Use TypeORM 0.3 findOne with where option
+    return this.usersRepository.findOne({ where: { id } });
+  }
+
+  async findByUsername(username: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { username } });
+  }
+
+  async update(id: string, dto: UpdateUserDto): Promise<User | null> {
+    await this.usersRepository.update(id, dto as any);
+    return this.findOne(id);
+  }
+
+  async updateStatus(id: string, dto: { isActive: boolean }): Promise<User | null> {
+    await this.usersRepository.update(id, { isActive: dto.isActive } as any);
+    return this.findOne(id);
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.usersRepository.delete(id);
   }
 }

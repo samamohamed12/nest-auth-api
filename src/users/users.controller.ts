@@ -2,13 +2,14 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, Put } from '@nestjs/
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ParseIntPipe } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { ApiCreateUser } from './decorators/api-create-user.decorator';
-import { ApiFindAllUsers } from './decorators/api-find-all-users.decorator';
-import { ApiFindOneUser } from './decorators/api-find-one-user.decorator';
-import { ApiUpdateUser } from './decorators/api-update-user.decorator';
-import { ApiDeleteUser } from './decorators/api-delete-user.decorator';
+import { ApiCreateUser } from './decorators/create-user.decorator';
+import { ApiFindAllUsers } from './decorators/find-all-users.decorator';
+import { ApiFindOneUser } from './decorators/find-one-user.decorator';
+import { ApiUpdateUser } from './decorators/update-user.decorator';
+import { ApiDeleteUser } from './decorators/delete-user.decorator';
+import { ApiUpdateUserStatus } from './decorators/update-user-status.decorator';
+import { UpdateUserStatusDto } from './dto/update-user-status.dto';
 
 
 @ApiTags('Users')
@@ -31,26 +32,25 @@ export class UsersController {
  
   @Get(':id')
   @ApiFindOneUser()
-  async findOne(@Param('id', ParseIntPipe) id: number) {
-  return this.usersService.findOne(id);
+  async findOne(@Param('id') id: string) {
+    return this.usersService.findOne(id);
   }
 
   @Put(':id')
   @ApiUpdateUser()
-  replace(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
+  replace(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
     return this.usersService.update(id, updateUserDto);
   }
 
-
   @Patch(':id')
-  @ApiUpdateUser()
-  update(@Param('id', ParseIntPipe) id: number, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @ApiUpdateUserStatus()
+  updateStatus(@Param('id') id: string, @Body() updateUserStatusDto: UpdateUserStatusDto) {
+    return this.usersService.updateStatus(id, updateUserStatusDto);
   }
 
   @Delete(':id')
   @ApiDeleteUser()
-  remove(@Param('id', ParseIntPipe) id: number) {
+  remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
 }
