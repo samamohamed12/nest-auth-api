@@ -1,60 +1,87 @@
-import { Injectable, UnauthorizedException, ConflictException, InternalServerErrorException } from '@nestjs/common';
-import { UsersService } from '../users/users.service';
+import { Injectable, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from '../users/dto/create-user.dto';
-import { ResetPasswordDto } from './dto/reset-password.dto';
-import * as bcrypt from 'bcrypt';
+import { UsersService } from '../users/users.service';
+import { User } from '../users/entities/user.entity';
+import * as bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
+
+
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService,
-    private jwtService: JwtService
+  constructor(
+    private usersService: UsersService,
+    private jwtService: JwtService,
   ) {}
 
-  async login(
-    username: string,
-    pass: string,
-  ): Promise<{ access_token: string }> {
-    const user = await this.usersService.findByUsername(username);
-    if (!user || user.password !== pass) {
-      throw new UnauthorizedException();
+  async register(email: string, password: string) {
+    // Delegate creation to UsersService which handles username generation and hashing
+    const created = await this.usersService.create({ email, password } as any);
+    return created;
+  }
+
+  async login(email: string, password: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) throw new UnauthorizedException('Invalid credentials');
+
+    const token = this.jwtService.sign({ id: user.id, email: user.email });
+    return { token };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new BadRequestException('User not found');
+
+    const resetToken = uuidv4();
+    const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
+
+    await this.usersService.update(user.id, { resetToken, resetTokenExpiry: expiry } as any);
+
+    console.log(` Reset token for ${email}: ${resetToken}`);
+    return { message: 'Reset token generated and logged in console' };
+  }
+
+  async resetPassword(resetToken: string, newPassword: string) {
+    const user = await this.usersService.findOneByResetToken(resetToken);
+    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+      throw new BadRequestException('Invalid or expired token');
     }
-    const payload = { sub: user.id, username: user.username };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    await this.usersService.update(user.id, { password: await bcrypt.hash(newPassword, 10), resetToken: null, resetTokenExpiry: null } as any);
+
+    return { message: 'Password updated successfully' };
   }
-  async register(dto: CreateUserDto): Promise<any> {
-    // Hash the password and create the user via UsersService
-    try {
-      const saltRounds = 10;
-      const hashed = await bcrypt.hash(dto.password, saltRounds);
-      const toCreate: CreateUserDto = { ...dto, password: hashed };
-      const user = await this.usersService.create(toCreate);
-      // return a sanitized response (do not expose password)
-      return {
-        message: 'User registered successfully',
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          isActive: user.isActive,
-          createdAt: user.createdAt,
-        },
-      };
-    } catch (err: any) {
-      // Simple duplicate detection - DB drivers differ, so use message heuristics
-      if (err && (err.code === '23505' || /duplicate|unique/i.test(err.message || ''))) {
-        throw new ConflictException('User with provided identifier already exists');
-      }
-      throw new InternalServerErrorException('Failed to register user');
+   async sendOtp(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) throw new BadRequestException('User not found');
+
+    // OTP code consisting of 6 digits
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date(Date.now() + 5 * 60 * 1000); // Expiry in 5 minutes
+
+    await this.usersService.update(user.id, { otpCode: otp, otpExpiry: expiry } as any);
+
+    console.log(` OTP for ${email}: ${otp}`);
+    return { message: 'OTP sent successfully (check console)' };
+  }
+
+  async validateOtp(email: string, otp: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.otpCode) {
+      throw new BadRequestException('No OTP found for this user');
     }
-  }
-  async forgotPassword(email: string): Promise<any> {
-    // Implement forgot password logic here
-    return { message: `Password reset link sent to ${email}` };
-  }
-  async resetPassword(token: string, newPassword: string): Promise<any> {
-    // Implement reset password logic here
-    return { message: 'Password has been reset successfully' };
+
+    if (user.otpCode !== otp) {
+      throw new BadRequestException('Invalid OTP code');
+    }
+
+    if (!user.otpExpiry || user.otpExpiry < new Date()) {
+      throw new BadRequestException('OTP expired');
+    }
+
+    await this.usersService.update(user.id, { otpCode: null, otpExpiry: null } as any);
+
+    return { message: 'OTP validated successfully' };
   }
 }

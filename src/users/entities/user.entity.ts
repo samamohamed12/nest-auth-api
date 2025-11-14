@@ -1,9 +1,11 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { v4 as uuidv4} from 'uuid';
 
 @Entity('users')
 export class User {
     @PrimaryGeneratedColumn('uuid')
-    id: string;
+    id: string = uuidv4();
+    
 
     @Column({ length: 100 })
     username: string;
@@ -29,8 +31,14 @@ export class User {
     @Column({ type: 'nvarchar', length: 512, nullable: true })
     resetToken: string | null;
 
-    // Use a SQL Server compatible datetime type
     @Column({ type: 'datetime', nullable: true })
     resetTokenExpiry: Date | null;
+
+    @Column({ type: 'nvarchar', length: 10, nullable: true })
+    otpCode: string | null;
+
+    @Column({ type: 'datetime', nullable: true })
+    otpExpiry: Date | null;
+    
 
 }
