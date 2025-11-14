@@ -1,0 +1,11 @@
+{
+  "invalid_credentials": "بيانات اعتماد غير صحيحة",
+  "user_not_found": "المستخدم غير موجود",
+  "email_exists": "البريد الإلكتروني موجود بالفعل",
+  "username_exists": "اسم المستخدم موجود بالفعل",
+  "invalid_token": "الرمز غير صالح أو منتهي الصلاحية",
+  "otp_invalid": "رمز التحقق غير صحيح",
+  "otp_expired": "انتهت صلاحية رمز التحقق",
+  "validation_failed": "فشل التحقق",
+  "internal_error": "خطأ في الخادم الداخلي"
+}

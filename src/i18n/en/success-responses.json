@@ -1,0 +1,18 @@
+{
+  "auth": {
+  "register_success": "User registered successfully",
+  "login_success": "Login successful",
+  "otp_sent": "OTP sent successfully",
+  "otp_validated": "OTP validated successfully",
+  "reset_token_generated": "Reset token generated",
+  "password_updated": "Password updated successfully"
+    },
+  "users": {
+  "user_created": "User created successfully",  
+  "user_updated": "User updated successfully",
+  "user_deleted": "User deleted successfully",
+  "user_retrieved": "User data retrieved successfully",
+  "users_retrieved": "Users list retrieved successfully"
+    }
+
+}

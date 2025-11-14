@@ -11,47 +11,68 @@ import { ApiUpdateUser } from './decorators/update-user.decorator';
 import { ApiDeleteUser } from './decorators/delete-user.decorator';
 import { ApiUpdateUserStatus } from './decorators/update-user-status.decorator';
 import { UpdateUserStatusDto } from './dto/update-user-status.dto';
+import { I18nService } from 'nestjs-i18n';
 
 
 @ApiTags('Users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(private readonly usersService: UsersService,
+    private readonly i18n: I18nService
+  ) {}
 
   @Post()
   @ApiCreateUser()
   create(@Body() dto: CreateUserDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.create(dto);
+      this.i18n.translate('successMessage.users.user_created',
+         { lang }
+        )as string
+    return this.usersService.create(dto) ;
   }
 
   @Get()
   @ApiFindAllUsers()
   findAll(@Query() query: ListUsersDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.findAll(query);
+      this.i18n.translate('successMessage.users.users_retrieved',
+         { lang }
+        )as string
+    return  this.usersService.findAll(query);
   }
 
  
   @Get(':id')
   @ApiFindOneUser()
   async findOne(@Param('id') id: string, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.findOne(id);
+      this.i18n.translate('successMessage.users.user_retrieved',
+         { lang }
+        )as string
+    return  this.usersService.findOne(id);
   }
 
   @Put(':id')
   @ApiUpdateUser()
   replace(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.update(id, updateUserDto);
+      this.i18n.translate('successMessage.users.user_updated',
+         { lang }
+        )as string
+    return  this.usersService.update(id, updateUserDto);
   }
 
   @Patch(':id')
   @ApiUpdateUserStatus()
   updateStatus(@Param('id') id: string, @Body() updateUserStatusDto: UpdateUserStatusDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.updateStatus(id, updateUserStatusDto);
+      this.i18n.translate('successMessage.users.user_status_updated',
+         { lang }
+        )as string
+    return  this.usersService.updateStatus(id, updateUserStatusDto);
   }
 
   @Delete(':id')
   @ApiDeleteUser()
   remove(@Param('id') id: string, @Query('lang') lang: 'en' | 'ar' = 'en') {
-    return this.usersService.remove(id);
+      this.i18n.translate('successMessage.users.user_deleted',
+         { lang }
+        )as string
+    return  this.usersService.remove(id);
   }
 }

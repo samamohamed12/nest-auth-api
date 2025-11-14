@@ -12,42 +12,67 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
 import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { I18nService } from 'nestjs-i18n';
+import { ApiTags } from '@nestjs/swagger';
+@ApiTags('Authentication')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService,
+    private readonly i18n: I18nService,
+
+  ) {}
 
   @Post('register')
   @ApiRegister()
   register(@Body() body: CreateAuthDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.user_registered',
+         { lang }
+        )as string
     return this.authService.register(body.email, body.password);
   }
 
   @Post('login')
   @ApiLogin()
   login(@Body() body: LoginDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.login_success',
+         { lang }
+        )as string
     return this.authService.login(body.username || (body as any).email, (body as any).password);
   }
 
   @Post('forgot-password')
   @ApiForgotPassword()
   forgotPassword(@Body() body: ForgotPasswordDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.otp_sent',
+         { lang }
+        )as string
     return this.authService.forgotPassword(body.email);
   }
 
   @Post('reset-password')
   @ApiResetPassword()
   resetPassword(@Body() body: ResetPasswordDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.password_updated',
+         { lang }
+        )as string
+    
     return this.authService.resetPassword((body as any).token || (body as any).resetToken || (body as ResetPasswordDto).token, body.newPassword);
   }
   @Post('send-otp')
   @ApiSendOtp()
   sendOtp(@Body() body: SendOtpDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.otp_sent',
+         { lang }
+        )as string
     return this.authService.sendOtp(body.email);
   }
 
   @Post('validate-otp')
   @ApiValidateOtp()
   validateOtp(@Body() body: ValidateOtpDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.otp_validated',
+         { lang }
+        )as string
     return this.authService.validateOtp(body.email, body.otp);
   }
 }

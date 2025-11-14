@@ -14,6 +14,9 @@ import { AppService } from './app.service';
 import { UsersModule } from './users/users.module';
 import { User } from './users/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
+import { I18nModule, AcceptLanguageResolver,QueryResolver,HeaderResolver} from 'nestjs-i18n';
+import * as path from 'path';
+
 
 @Module({
   imports: [
@@ -32,6 +35,19 @@ import { AuthModule } from './auth/auth.module';
         encrypt: false,
         trustServerCertificate: true,
       },
+    }),
+    I18nModule.forRoot({
+      fallbackLanguage: 'en',
+      loaderOptions: {
+        path: path.join(__dirname, '/i18n/'),
+        watch: true,
+      },
+      resolvers: [{use: QueryResolver, options: ['lang']},         
+       new HeaderResolver(['x-lang']),
+       AcceptLanguageResolver,
+                 
+          ],
+
     }),
     UsersModule,
     AuthModule,

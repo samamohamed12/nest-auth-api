@@ -1,0 +1,11 @@
+{
+  "invalid_credentials": "Invalid credentials",
+  "user_not_found": "User not found",
+  "email_exists": "Email already exists",
+  "username_exists": "Username already exists",
+  "invalid_token": "Invalid or expired token",
+  "otp_invalid": "Invalid OTP code",
+  "otp_expired": "OTP expired",
+  "validation_failed": "Validation failed",
+  "internal_error": "Internal server error"
+}
