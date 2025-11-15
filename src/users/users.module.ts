@@ -3,7 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
-
+import { JwtAuthGuard } from 'src/guards/jwt-auth.guard';
 @Module({
   imports: [TypeOrmModule.forFeature([User])],
   controllers: [UsersController],

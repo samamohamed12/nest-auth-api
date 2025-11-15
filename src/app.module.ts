@@ -16,6 +16,11 @@ import { User } from './users/entities/user.entity';
 import { AuthModule } from './auth/auth.module';
 import { I18nModule, AcceptLanguageResolver,QueryResolver,HeaderResolver} from 'nestjs-i18n';
 import * as path from 'path';
+import { RolesGuard } from './guards/roles.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { APP_INTERCEPTOR } from '@nestjs/core';
+import { LoggingInterceptor } from './interceptors/logging.interceptor';
 
 
 @Module({
@@ -53,7 +58,22 @@ import * as path from 'path';
     AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+   providers: [
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: RolesGuard,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: LoggingInterceptor,
+    },
+    AppService
+  ],
+  
 })
 export class AppModule {  
 }

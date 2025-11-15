@@ -6,7 +6,6 @@ import {
   ApiUnauthorizedResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { User } from '../entities/user.entity';
 
 export function ApiFindAllUsers() {
   return applyDecorators(

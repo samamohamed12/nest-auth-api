@@ -5,6 +5,7 @@ import { User } from '../users/entities/user.entity';
 import * as bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { I18nService } from 'nestjs-i18n';
+import { CreateAuthDto } from './dto/create-auth.dto';
 
 
 @Injectable()
@@ -36,24 +37,25 @@ export class AuthService {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new BadRequestException(this.i18n.translate('errorMessage.auth.user_not_found'));
 
-    const resetToken = uuidv4();
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date(Date.now() + 15 * 60 * 1000); // 15 min
 
-    await this.usersService.update(user.id, { resetToken, resetTokenExpiry: expiry } as any);
+    await this.usersService.update(user.id, { otpCode, otpExpiry: expiry } as any);
 
-    console.log(` Reset token for ${email}: ${resetToken}`);
+    console.log(` Reset token for ${email}: ${otpCode}`);
     return this.i18n.translate('successMessage.auth.reset_token_generated');
   }
 
-  async resetPassword(resetToken: string, newPassword: string) {
-    const user = await this.usersService.findOneByResetToken(resetToken);
-    if (!user || !user.resetTokenExpiry || user.resetTokenExpiry < new Date()) {
+  async resetPassword(email: string,otpCode: string, newPassword: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user || !user.otpCode || user.otpCode !== otpCode || !user.otpExpiry || user.otpExpiry < new Date()) {
       throw new BadRequestException(this.i18n.translate('errorMessage.auth.invalid_or_expired_token'));
     }
-    await this.usersService.update(user.id, { password: await bcrypt.hash(newPassword, 10), resetToken: null, resetTokenExpiry: null } as any);
+    await this.usersService.update(user.id, { password: await bcrypt.hash(newPassword, 10), otpCode: null, otpExpiry: null } as any);
 
     return this.i18n.translate('successMessage.auth.password_updated');
   }
+
    async sendOtp(email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) throw new BadRequestException(this.i18n.translate('errorMessage.auth.user_not_found'));
@@ -84,5 +86,28 @@ export class AuthService {
     await this.usersService.update(user.id, { otpCode: null, otpExpiry: null } as any);
 
     return this.i18n.translate('successMessage.auth.otp_validated');
+  }
+  async createRoles(dto: CreateAuthDto) {
+    // Create a new user and assign the 'admin' role to them.
+    // This endpoint is protected by @Roles(['admin']) so only admins can create other admin users.
+    try {
+      const created = await this.usersService.create({
+        email: dto.email,
+        password: dto.password,
+        username: (dto as any).username,
+      } as any);
+
+      // Assign role - update accepts a partial dto, cast to any to set role
+      await this.usersService.update(created.id, { role: 'admin' } as any);
+
+      return this.i18n.translate('successMessage.auth.roles_created');
+    } catch (err: any) {
+      // If creation failed because of uniqueness or validation, rethrow a translated error
+      const msg = err?.message || err?.toString?.();
+      if (/unique|duplicate|exists/i.test(msg || '')) {
+        throw new BadRequestException(this.i18n.translate('errorMessage.auth.email_exists'));
+      }
+      throw err;
+    }
   }
 }

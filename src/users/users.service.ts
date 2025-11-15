@@ -57,7 +57,18 @@ export class UsersService {
     const qb = this.usersRepository.createQueryBuilder('user');
 
     if (options?.isActive !== undefined) {
-      qb.andWhere('user.isActive = :isActive', { isActive: options.isActive });
+      // query params come in as strings from Swagger/curl (e.g. "true"/"false");
+      // coerce to boolean to avoid DB type errors
+      let isActiveVal: any = options.isActive;
+      if (typeof isActiveVal === 'string') {
+        const v = isActiveVal.toLowerCase().trim();
+        if (v === 'true') isActiveVal = true;
+        else if (v === 'false') isActiveVal = false;
+        else isActiveVal = undefined;
+      }
+      if (typeof isActiveVal === 'boolean') {
+        qb.andWhere('user.isActive = :isActive', { isActive: isActiveVal });
+      }
     }
 
     if (options?.search) {
@@ -65,7 +76,8 @@ export class UsersService {
       qb.andWhere('(user.username LIKE :s OR user.email LIKE :s)', { s });
     }
 
-    const sort = options?.sort === 'DESC' ? 'DESC' : 'ASC';
+    const sortRaw = typeof options?.sort === 'string' ? options.sort.toUpperCase().trim() : '';
+    const sort = sortRaw === 'DESC' ? 'DESC' : 'ASC';
     qb.orderBy('user.createdAt', sort as 'ASC' | 'DESC');
 
     qb.skip(skip).take(limit);
@@ -88,9 +100,7 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findOneByResetToken(resetToken: string): Promise<User | null> {
-    return this.usersRepository.findOne({ where: { resetToken } });
-  }
+
 
   async update(id: string, dto: UpdateUserDto): Promise<User | null> {
     await this.usersRepository.update(id, dto as any);
@@ -103,6 +113,7 @@ export class UsersService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.usersRepository.delete(id);
+    const s=await this.usersRepository.delete(id);
+    console.log(s);
   }
 }

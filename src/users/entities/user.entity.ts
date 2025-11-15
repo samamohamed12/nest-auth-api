@@ -28,11 +28,6 @@ export class User {
     @UpdateDateColumn()
     updatedAt: Date;
 
-    @Column({ type: 'nvarchar', length: 512, nullable: true })
-    resetToken: string | null;
-
-    @Column({ type: 'datetime', nullable: true })
-    resetTokenExpiry: Date | null;
 
     @Column({ type: 'nvarchar', length: 10, nullable: true })
     otpCode: string | null;

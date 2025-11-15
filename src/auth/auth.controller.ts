@@ -5,13 +5,13 @@ import { ApiForgotPassword } from './decorators/forgot-password-doc.decorator';
 import { ApiLogin } from './decorators/login-doc.decorator';
 import { ApiResetPassword } from './decorators/reset-password-doc.decorator';
 import { ApiSendOtp } from './decorators/send-otp-doc.decorator';
-import { ApiValidateOtp } from './decorators/validate-otp-doc.decorator';
 import { CreateAuthDto } from './dto/create-auth.dto';
 import { LoginDto } from './dto/login.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SendOtpDto } from './dto/send-otp.dto';
-import { ValidateOtpDto } from './dto/validate-otp.dto';
+import { Roles } from '../guards/decorators/roles.decorator';
+
 import { I18nService } from 'nestjs-i18n';
 import { ApiTags } from '@nestjs/swagger';
 @ApiTags('Authentication')
@@ -37,7 +37,7 @@ export class AuthController {
       this.i18n.translate('successMessage.auth.login_success',
          { lang }
         )as string
-    return this.authService.login(body.username || (body as any).email, (body as any).password);
+    return this.authService.login(body.email , body.password);
   }
 
   @Post('forgot-password')
@@ -56,7 +56,7 @@ export class AuthController {
          { lang }
         )as string
     
-    return this.authService.resetPassword((body as any).token || (body as any).resetToken || (body as ResetPasswordDto).token, body.newPassword);
+    return this.authService.resetPassword(body.email, body.otpCode, body.newPassword);
   }
   @Post('send-otp')
   @ApiSendOtp()
@@ -66,13 +66,13 @@ export class AuthController {
         )as string
     return this.authService.sendOtp(body.email);
   }
-
-  @Post('validate-otp')
-  @ApiValidateOtp()
-  validateOtp(@Body() body: ValidateOtpDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
-      this.i18n.translate('successMessage.auth.otp_validated',
+  @Post()
+  @Roles(['admin'])
+  async createRoles(@Body() dto: CreateAuthDto, @Query('lang') lang: 'en' | 'ar' = 'en') {
+      this.i18n.translate('successMessage.auth.roles_created',
          { lang }
         )as string
-    return this.authService.validateOtp(body.email, body.otp);
-  }
+  return this.authService.createRoles(dto);
+}
+
 }
