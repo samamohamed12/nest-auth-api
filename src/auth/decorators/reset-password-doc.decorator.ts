@@ -4,7 +4,7 @@ import { ResetPasswordDto } from '../dto/reset-password.dto';
 
 export function ApiResetPassword() {
   return applyDecorators(
-    ApiOperation({ summary: 'Reset user password using token' }),
+    ApiOperation({ summary: 'Reset user password using otpcode' }),
     ApiQuery({
       name: 'lang',
       required: false,
@@ -15,15 +15,15 @@ export function ApiResetPassword() {
     }),
     ApiBody({
       type: ResetPasswordDto,
-      description: 'Token and new password',
+      description: 'otpCode and new password',
       examples: {
         example1: {
           summary: 'Reset password example',
-          value: { token: 'a1b2c3d4-token', newPassword: 'newStrongPassword123' },
+          value: { otpCode: '123456', newPassword: 'newStrongPassword123' },
         },
       },
     }),
     ApiOkResponse({ description: 'Password has been reset successfully.' }),
-    ApiBadRequestResponse({ description: 'Bad request. Invalid input data or token.' }),
+    ApiBadRequestResponse({ description: 'Bad request. Invalid input data or otpCode.' }),
   );
 }

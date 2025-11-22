@@ -20,7 +20,7 @@ export function ApiLogin() {
         example1: {
           summary: 'Login example',
           value: {
-            username: 'sama',
+            email: 'sama@example.com',
             password: '123456',
           },
         },
